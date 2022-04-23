@@ -1,0 +1,10 @@
+{
+	"id": "obsidian-clocktable",
+	"name": "Obsidian Clocktable",
+	"version": "0.0.1",
+	"minAppVersion": "0.12.0",
+	"description": "Obsidian Clocktable is a task management plugin inspired by Emacs' clocktable mode.",
+	"author": "wuzzapcom",
+	"authorUrl": "https://github.com/wuzzapcom",
+	"isDesktopOnly": false
+}
