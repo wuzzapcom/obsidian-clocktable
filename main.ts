@@ -28,7 +28,6 @@ export default class ObsidianClocktable extends Plugin {
 			name: 'Insert clocktable report',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				new EnterReportIntervalsModal(this.app, (s: Moment, f: Moment)=>{
-					this.settings.pathToDailyNotes
 					prepareReport(this.app, s, f, this.settings.pathToDailyNotes, (text: string) => {
 						editor.replaceRange(text, editor.getCursor());
 					})
@@ -84,8 +83,8 @@ export default class ObsidianClocktable extends Plugin {
 }
 
 class EnterReportIntervalsModal extends Modal {
-	start: string;
-	finish: string;
+	start: string = moment().format("YYYY-MM-DD");
+	finish: string = moment().format("YYYY-MM-DD");
 	callback: (s: Moment, f:Moment)=>void;
 
 	constructor(app: App, c: (s: Moment, f:Moment)=>void) {
@@ -98,21 +97,24 @@ class EnterReportIntervalsModal extends Modal {
 		contentEl.createEl("h1", { text: "Obsidian Clocktable" });
 		contentEl.createEl("h2", { text: "Report interval(YYYY-MM-DD format)" });
 
-		// start interval TextEdit
 		new Setting(contentEl)
-		.setName("start")
-		.addText((text) =>
-		  text.onChange((value) => {
-			this.start = value
-		  }));
+		.setName("start date")
+		.addText(text => text
+			.setValue(this.start)
+			.onChange((value) => {
+				this.start = value
+		  	})
+		);
 
 		// finish interval TextEdit
 		new Setting(contentEl)
-		.setName("finish")
-		.addText((text) =>
-		text.onChange((value) => {
-			this.finish = value
-		}));
+		.setName("finish date")
+		.addText(text => text
+			.setValue(this.finish)
+			.onChange((value) => {
+				this.finish = value
+		  	})
+		)
 
 		// Submit button
 		new Setting(contentEl)
@@ -212,8 +214,7 @@ async function prepareReport(app: App, start: Moment, finish:Moment, dailyPath:s
 
 	let report = ""
 	taskDurations.forEach((v, k, m) => {
-		let formattedDur = moment.utc(moment.duration(v, "seconds").asMilliseconds()).format("H[h]mm[m]")
-		report += `${k} => ${formattedDur}\n`
+		report += `${k} => ${moment.duration(v, "seconds").toISOString().substring(2)}\n`
 	})
 	
 	onComplete(report)
@@ -225,6 +226,9 @@ function calculateDurations(taskDurations: Map<string, number>, content: string)
 	for (var l of lines.reverse()) {
 		let m = l.match(taskFormatRegexp)
 		if (m == null) {
+			if (l.startsWith("- [") && l.contains(":")) {
+				new Notice(`Line not matched regexp but seems similar to format, please check for typos: "${l}"`)
+			}
 			continue
 		}
 
@@ -248,9 +252,12 @@ function calculateDurations(taskDurations: Map<string, number>, content: string)
 
 function generateFilenamesInInterval(start: Moment, finish: Moment): string[] {
 	var res: string[] = []
+	let formatFilename = (m: Moment): string => {return m.format("YYYY-MM-DD")+".md"}
+
 	for (let cur = start; cur.format("YYYY-MM-DD") != finish.format("YYYY-MM-DD"); cur = cur.add(1, 'day')) {
-		res.push(cur.format("YYYY-MM-DD")+".md")
+		res.push(formatFilename(cur))
 	}
+	res.push(formatFilename(finish))
 
 	return res
 }
