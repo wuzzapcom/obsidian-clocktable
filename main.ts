@@ -59,10 +59,12 @@ export default class ObsidianClocktable extends Plugin {
 			id: 'insert-black-task-line',
 			name: 'Insert line with black task',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
+				let curTime = moment()
+				curTime.subtract(curTime.minute()%5, 'minute')
 				let cur = editor.getCursor().line
 				editor.setLine(cur,
 					editor.getLine(editor.getCursor().line) +
-					"\n- [11:30] :ex:"	
+					`\n- [${curTime.format("HH:mm")}] :ex:`
 				)
 			},
 			hotkeys: [{modifiers: ["Mod", "Shift"], key: "l"}],
